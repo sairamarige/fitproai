@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}AI Assistant - FitPro AI{% endblock %}
+
+{% block content %}
+<section class="ai-header py-4">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 class="fw-bold mb-1">
+                    <i class="bi bi-robot me-2" style="color: var(--accent-cyan);"></i>AI Fitness Assistant
+                </h2>
+                <p class="mb-0" style="color: var(--text-secondary);">
+                    Personalized workout &amp; nutrition guidance based on your profile.
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <span class="badge glass px-3 py-2">
+                    <i class="bi bi-bullseye me-2"></i>Goal: {{ (user.fitness_goal or 'general_fitness')|replace('_', ' ')|title }}
+                </span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="ai-content py-3">
+    <div class="container">
+        <div class="row g-4">
+            <!-- Daily Calorie Target -->
+            <div class="col-12">
+                <div class="glass-card p-4 text-center">
+                    <h6 class="fw-bold text-uppercase small mb-2" style="color: var(--text-muted);">Recommended Daily Calories</h6>
+                    <div class="display-4 fw-bold" style="background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                        {{ "{:,}".format(daily_calories) }}
+                    </div>
+                    <p class="mb-0" style="color: var(--text-muted);">calories / day &middot; based on the Mifflin-St Jeor equation</p>
+                </div>
+            </div>
+
+            <!-- Workout Recommendation -->
+            <div class="col-lg-6">
+                <div class="glass-card p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0">
+                            <i class="bi bi-lightning-charge me-2" style="color: var(--accent-cyan);"></i>Workout Plan
+                        </h5>
+                        <a href="{{ url_for('workouts') }}" class="btn btn-sm btn-glass">
+                            <i class="bi bi-plus-lg me-1"></i>Log It
+                        </a>
+                    </div>
+                    <h6 class="fw-bold">{{ workout_rec.title }}</h6>
+                    <p class="small" style="color: var(--text-secondary);">{{ workout_rec.description }}</p>
+                    <div class="d-flex gap-2 mb-3">
+                        <span class="badge glass"><i class="bi bi-clock me-1"></i>{{ workout_rec.duration }} min</span>
+                        <span class="badge glass"><i class="bi bi-speedometer2 me-1"></i>{{ workout_rec.intensity|title }}</span>
+                    </div>
+                    <h6 class="fw-bold small text-uppercase" style="color: var(--text-muted);">Exercises</h6>
+                    <ul class="list-unstyled mb-0">
+                        {% for exercise in workout_rec.exercises %}
+                        <li class="d-flex justify-content-between align-items-center py-2" style="border-bottom: 1px solid var(--glass-border);">
+                            <span>{{ exercise.name }}</span>
+                            <span class="small" style="color: var(--text-muted);">
+                                {{ exercise.sets }} sets &times; {{ exercise.reps }} &middot; rest {{ exercise.rest }}
+                            </span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Diet Recommendation -->
+            <div class="col-lg-6">
+                <div class="glass-card p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0">
+                            <i class="bi bi-apple me-2" style="color: var(--accent-purple);"></i>Diet Plan
+                        </h5>
+                        <a href="{{ url_for('diet') }}" class="btn btn-sm btn-glass">
+                            <i class="bi bi-plus-lg me-1"></i>Log It
+                        </a>
+                    </div>
+                    <h6 class="fw-bold">{{ diet_rec.title }}</h6>
+                    <p class="small" style="color: var(--text-secondary);">{{ diet_rec.description }}</p>
+                    <div class="d-flex gap-2 mb-3">
+                        <span class="badge glass">Protein {{ diet_rec.macros.protein }}%</span>
+                        <span class="badge glass">Carbs {{ diet_rec.macros.carbs }}%</span>
+                        <span class="badge glass">Fats {{ diet_rec.macros.fats }}%</span>
+                    </div>
+                    <h6 class="fw-bold small text-uppercase" style="color: var(--text-muted);">Sample Meals</h6>
+                    <ul class="list-unstyled mb-0">
+                        {% for meal in diet_rec.meals %}
+                        <li class="d-flex justify-content-between align-items-center py-2" style="border-bottom: 1px solid var(--glass-border);">
+                            <span>
+                                <span class="badge glass me-2" style="font-size: 0.65rem;">{{ meal.type|title }}</span>{{ meal.name }}
+                            </span>
+                            <span class="small" style="color: var(--text-muted);">{{ meal.calories }} kcal</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- BMI Insight -->
+            <div class="col-12">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-3">
+                        <i class="bi bi-heart-pulse me-2" style="color: var(--danger-color);"></i>Body Insight
+                    </h5>
+                    {% if bmi_data %}
+                    <div class="row align-items-center">
+                        <div class="col-md-3 text-center mb-3 mb-md-0">
+                            <div class="display-5 fw-bold">{{ bmi_data.bmi_value }}</div>
+                            <span class="badge glass">{{ bmi_data.bmi_category|replace('_', ' ')|title }}</span>
+                        </div>
+                        <div class="col-md-9">
+                            <p class="mb-0" style="color: var(--text-secondary);">
+                                Your most recent BMI was recorded on {{ bmi_data.calculated_at }}. The recommendations above
+                                are tailored to your {{ (user.fitness_goal or 'general_fitness')|replace('_', ' ') }} goal
+                                and {{ user.activity_level or 'moderate' }} activity level.
+                            </p>
+                            <a href="{{ url_for('bmi') }}" class="btn btn-sm btn-glass mt-2">
+                                <i class="bi bi-calculator me-1"></i>Recalculate BMI
+                            </a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="bi bi-calculator display-4" style="color: var(--text-muted);"></i>
+                        <p class="mt-2 mb-3" style="color: var(--text-secondary);">
+                            Calculate your BMI to get more personalized insights.
+                        </p>
+                        <a href="{{ url_for('bmi') }}" class="btn btn-gradient btn-sm">
+                            <i class="bi bi-calculator me-1"></i>Calculate BMI
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

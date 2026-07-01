@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Login - FitPro AI{% endblock %}
+
+{% block content %}
+<section class="auth-section py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5 col-lg-4">
+                <div class="text-center mb-4">
+                    <h1 class="fw-bold" style="background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                        <i class="bi bi-activity me-2"></i>FitPro AI
+                    </h1>
+                    <p style="color: var(--text-secondary);">Welcome back! Log in to continue.</p>
+                </div>
+
+                <div class="glass-card p-4">
+                    <form action="{{ url_for('login') }}" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label">Username or Email</label>
+                            <div class="input-group">
+                                <span class="input-group-text" style="background: rgba(255,255,255,0.05); border-color: var(--glass-border);">
+                                    <i class="bi bi-person"></i>
+                                </span>
+                                <input type="text" name="username" class="form-control form-control-glass" required autofocus placeholder="Enter username or email">
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text" style="background: rgba(255,255,255,0.05); border-color: var(--glass-border);">
+                                    <i class="bi bi-lock"></i>
+                                </span>
+                                <input type="password" name="password" class="form-control form-control-glass" required placeholder="Enter password">
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-gradient">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>Log In
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="text-center mt-4">
+                        <p style="color: var(--text-muted);">
+                            Don't have an account? 
+                            <a href="{{ url_for('signup') }}" style="color: var(--accent-cyan); text-decoration: none;">Sign up</a>
+                        </p>
+                        <a href="{{ url_for('index') }}" class="text-muted text-decoration-none small">
+                            <i class="bi bi-arrow-left me-1"></i>Back to Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

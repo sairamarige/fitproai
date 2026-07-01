@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}Diet Planner - FitPro AI{% endblock %}
+
+{% block content %}
+<section class="diet-section py-4">
+    <div class="container">
+        <!-- Header -->
+        <div class="row align-items-center mb-4">
+            <div class="col-md-8">
+                <h2 class="fw-bold mb-1">
+                    <i class="bi bi-apple me-2" style="color: var(--accent-pink);"></i>Diet Planner
+                </h2>
+                <p class="mb-0" style="color: var(--text-secondary);">Plan meals, track nutrition, and hit your macros.</p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <button class="btn btn-gradient" data-bs-toggle="modal" data-bs-target="#addMealModal">
+                    <i class="bi bi-plus-lg me-2"></i>Add Meal
+                </button>
+            </div>
+        </div>
+
+        <!-- Today's Nutrition Summary -->
+        <div class="glass-card p-4 mb-4">
+            <h5 class="fw-bold mb-3">Today's Nutrition</h5>
+            <div class="row g-3">
+                <div class="col-6 col-md-3">
+                    <div class="text-center p-3 rounded-3" style="background: rgba(255,255,255,0.03);">
+                        <i class="bi bi-fire fs-4" style="color: var(--warning-color);"></i>
+                        <div class="fw-bold fs-4 mt-1">{{ stats.today_calories|int }}</div>
+                        <small style="color: var(--text-muted);">Calories</small>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="text-center p-3 rounded-3" style="background: rgba(0,245,212,0.05);">
+                        <i class="bi bi-egg-fried fs-4" style="color: var(--success-color);"></i>
+                        <div class="fw-bold fs-4 mt-1">{{ stats.today_protein|int }}g</div>
+                        <small style="color: var(--text-muted);">Protein</small>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="text-center p-3 rounded-3" style="background: rgba(254,228,64,0.05);">
+                        <i class="bi bi-bread-slice fs-4" style="color: var(--warning-color);"></i>
+                        <div class="fw-bold fs-4 mt-1">{{ stats.today_carbs|int }}g</div>
+                        <small style="color: var(--text-muted);">Carbs</small>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="text-center p-3 rounded-3" style="background: rgba(241,91,181,0.05);">
+                        <i class="bi bi-droplet fs-4" style="color: var(--danger-color);"></i>
+                        <div class="fw-bold fs-4 mt-1">{{ stats.today_fats|int }}g</div>
+                        <small style="color: var(--text-muted);">Fats</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diet Plans Table -->
+        <div class="glass-card overflow-hidden">
+            <div class="p-3 border-bottom" style="border-color: var(--glass-border) !important;">
+                <h5 class="fw-bold mb-0">Your Meals</h5>
+            </div>
+            {% if diet_plans %}
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0" style="--bs-table-bg: transparent; --bs-table-color: var(--text-primary);">
+                    <thead>
+                        <tr style="border-color: var(--glass-border);">
+                            <th>Meal</th>
+                            <th>Type</th>
+                            <th>Calories</th>
+                            <th>Protein</th>
+                            <th>Carbs</th>
+                            <th>Fats</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for meal in diet_plans %}
+                        <tr style="border-color: var(--glass-border);">
+                            <td>
+                                <span class="fw-bold">{{ meal.meal_name }}</span>
+                                {% if meal.ingredients %}
+                                <br><small style="color: var(--text-muted);">{{ meal.ingredients[:40] }}{% if meal.ingredients|length > 40 %}...{% endif %}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge glass">{{ meal.meal_type|title }}</span>
+                            </td>
+                            <td>{{ meal.calories }}</td>
+                            <td>{{ meal.protein_g|int }}g</td>
+                            <td>{{ meal.carbs_g|int }}g</td>
+                            <td>{{ meal.fats_g|int }}g</td>
+                            <td>{{ meal.scheduled_date or '-' }}</td>
+                            <td>
+                                {% if meal.consumed %}
+                                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Eaten</span>
+                                {% else %}
+                                <span class="badge glass"><i class="bi bi-clock me-1"></i>Planned</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-glass" data-bs-toggle="modal" data-bs-target="#editMealModal{{ meal.id }}">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-glass text-danger" onclick="confirmDelete('deleteMeal{{ meal.id }}')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                                <form id="deleteMeal{{ meal.id }}" action="{{ url_for('diet') }}" method="POST" class="d-none">
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="diet_id" value="{{ meal.id }}">
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-apple display-1" style="color: var(--text-muted);"></i>
+                <h5 class="mt-3">No Meals Logged</h5>
+                <p style="color: var(--text-secondary);">Start tracking your nutrition!</p>
+                <button class="btn btn-gradient" data-bs-toggle="modal" data-bs-target="#addMealModal">
+                    <i class="bi bi-plus-lg me-2"></i>Add Meal
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Add Meal Modal -->
+<div class="modal fade" id="addMealModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content glass">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg me-2"></i>Add New Meal</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('diet') }}" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="action" value="create">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Meal Name *</label>
+                            <input type="text" name="meal_name" class="form-control form-control-glass" required placeholder="e.g., Grilled Chicken Salad">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Meal Type *</label>
+                            <select name="meal_type" class="form-control form-control-glass" required>
+                                <option value="breakfast">Breakfast</option>
+                                <option value="lunch">Lunch</option>
+                                <option value="dinner">Dinner</option>
+                                <option value="snack">Snack</option>
+                                <option value="pre_workout">Pre-Workout</option>
+                                <option value="post_workout">Post-Workout</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Calories *</label>
+                            <input type="number" name="calories" class="form-control form-control-glass" required min="0" placeholder="kcal">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Protein (g)</label>
+                            <input type="number" name="protein_g" class="form-control form-control-glass" step="0.1" min="0" placeholder="g">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Carbs (g)</label>
+                            <input type="number" name="carbs_g" class="form-control form-control-glass" step="0.1" min="0" placeholder="g">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Fats (g)</label>
+                            <input type="number" name="fats_g" class="form-control form-control-glass" step="0.1" min="0" placeholder="g">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Fiber (g)</label>
+                            <input type="number" name="fiber_g" class="form-control form-control-glass" step="0.1" min="0" placeholder="g">
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label">Scheduled Date</label>
+                            <input type="date" name="scheduled_date" class="form-control form-control-glass">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control form-control-glass" rows="2" placeholder="Brief description..."></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Ingredients</label>
+                            <textarea name="ingredients" class="form-control form-control-glass" rows="2" placeholder="List ingredients..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-glass" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-gradient"><i class="bi bi-plus-lg me-2"></i>Add Meal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Meal Modals -->
+{% for meal in diet_plans %}
+<div class="modal fade" id="editMealModal{{ meal.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content glass">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold"><i class="bi bi-pencil me-2"></i>Edit Meal</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('diet') }}" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="action" value="update">
+                    <input type="hidden" name="diet_id" value="{{ meal.id }}">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Meal Name *</label>
+                            <input type="text" name="name" class="form-control form-control-glass" required value="{{ meal.meal_name }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Meal Type *</label>
+                            <select name="meal_type" class="form-control form-control-glass" required>
+                                {% for t in ['breakfast', 'lunch', 'dinner', 'snack', 'pre_workout', 'post_workout'] %}
+                                <option value="{{ t }}" {{ 'selected' if meal.meal_type == t else '' }}>{{ t|title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Calories *</label>
+                            <input type="number" name="calories" class="form-control form-control-glass" required min="0" value="{{ meal.calories }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Protein (g)</label>
+                            <input type="number" name="protein_g" class="form-control form-control-glass" step="0.1" min="0" value="{{ meal.protein_g }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Carbs (g)</label>
+                            <input type="number" name="carbs_g" class="form-control form-control-glass" step="0.1" min="0" value="{{ meal.carbs_g }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Fats (g)</label>
+                            <input type="number" name="fats_g" class="form-control form-control-glass" step="0.1" min="0" value="{{ meal.fats_g }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Fiber (g)</label>
+                            <input type="number" name="fiber_g" class="form-control form-control-glass" step="0.1" min="0" value="{{ meal.fiber_g }}">
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label">Scheduled Date</label>
+                            <input type="date" name="scheduled_date" class="form-control form-control-glass" value="{{ meal.scheduled_date or '' }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control form-control-glass" rows="2">{{ meal.description or '' }}</textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Ingredients</label>
+                            <textarea name="ingredients" class="form-control form-control-glass" rows="2">{{ meal.ingredients or '' }}</textarea>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="consumed" id="consumed{{ meal.id }}" {{ 'checked' if meal.consumed else '' }}>
+                                <label class="form-check-label" for="consumed{{ meal.id }}">
+                                    Mark as consumed
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-glass" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-gradient"><i class="bi bi-check-lg me-2"></i>Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}

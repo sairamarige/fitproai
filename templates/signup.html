@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up - FitPro AI{% endblock %}
+
+{% block content %}
+<section class="auth-section py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="text-center mb-4">
+                    <h1 class="fw-bold" style="background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                        <i class="bi bi-activity me-2"></i>FitPro AI
+                    </h1>
+                    <p style="color: var(--text-secondary);">Create your free account to get started.</p>
+                </div>
+
+                <div class="glass-card p-4">
+                    <form action="{{ url_for('signup') }}" method="POST">
+                        <!-- Account Info -->
+                        <h6 class="fw-bold mb-3" style="color: var(--accent-cyan);">
+                            <i class="bi bi-shield-lock me-2"></i>Account Information
+                        </h6>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Username *</label>
+                                <input type="text" name="username" class="form-control form-control-glass" required
+                                       value="{{ form_data.username if form_data else '' }}"
+                                       placeholder="Choose username" minlength="3">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email *</label>
+                                <input type="email" name="email" class="form-control form-control-glass" required
+                                       value="{{ form_data.email if form_data else '' }}"
+                                       placeholder="your@email.com">
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Password *</label>
+                                <input type="password" name="password" class="form-control form-control-glass" required
+                                       placeholder="Min 6 characters" minlength="6">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Confirm Password *</label>
+                                <input type="password" name="confirm_password" class="form-control form-control-glass" required
+                                       placeholder="Repeat password" minlength="6">
+                            </div>
+                        </div>
+
+                        <!-- Personal Info -->
+                        <h6 class="fw-bold mb-3" style="color: var(--accent-cyan);">
+                            <i class="bi bi-person-vcard me-2"></i>Personal Information
+                        </h6>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Full Name</label>
+                                <input type="text" name="full_name" class="form-control form-control-glass"
+                                       value="{{ form_data.full_name if form_data else '' }}"
+                                       placeholder="Your full name">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Age</label>
+                                <input type="number" name="age" class="form-control form-control-glass"
+                                       value="{{ form_data.age if form_data else '' }}"
+                                       placeholder="Years" min="10" max="120">
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Gender</label>
+                                <select name="gender" class="form-control form-control-glass">
+                                    <option value="">Select</option>
+                                    <option value="male" {{ 'selected' if form_data and form_data.gender == 'male' else '' }}>Male</option>
+                                    <option value="female" {{ 'selected' if form_data and form_data.gender == 'female' else '' }}>Female</option>
+                                    <option value="other" {{ 'selected' if form_data and form_data.gender == 'other' else '' }}>Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Height (cm)</label>
+                                <input type="number" name="height_cm" class="form-control form-control-glass" step="0.1"
+                                       value="{{ form_data.height_cm if form_data else '' }}"
+                                       placeholder="e.g., 175">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Weight (kg)</label>
+                                <input type="number" name="weight_kg" class="form-control form-control-glass" step="0.1"
+                                       value="{{ form_data.weight_kg if form_data else '' }}"
+                                       placeholder="e.g., 70">
+                            </div>
+                        </div>
+
+                        <!-- Fitness Goals -->
+                        <h6 class="fw-bold mb-3" style="color: var(--accent-cyan);">
+                            <i class="bi bi-bullseye me-2"></i>Fitness Goals
+                        </h6>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Primary Goal</label>
+                                <select name="fitness_goal" class="form-control form-control-glass">
+                                    <option value="general_fitness" {{ 'selected' if form_data and form_data.fitness_goal == 'general_fitness' else '' }}>General Fitness</option>
+                                    <option value="weight_loss" {{ 'selected' if form_data and form_data.fitness_goal == 'weight_loss' else '' }}>Weight Loss</option>
+                                    <option value="muscle_gain" {{ 'selected' if form_data and form_data.fitness_goal == 'muscle_gain' else '' }}>Muscle Gain</option>
+                                    <option value="endurance" {{ 'selected' if form_data and form_data.fitness_goal == 'endurance' else '' }}>Endurance</option>
+                                    <option value="flexibility" {{ 'selected' if form_data and form_data.fitness_goal == 'flexibility' else '' }}>Flexibility</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Activity Level</label>
+                                <select name="activity_level" class="form-control form-control-glass">
+                                    <option value="sedentary" {{ 'selected' if form_data and form_data.activity_level == 'sedentary' else '' }}>Sedentary</option>
+                                    <option value="light" {{ 'selected' if form_data and form_data.activity_level == 'light' else '' }}>Lightly Active</option>
+                                    <option value="moderate" {{ 'selected' if form_data and form_data.activity_level == 'moderate' else '' }}>Moderately Active</option>
+                                    <option value="active" {{ 'selected' if form_data and form_data.activity_level == 'active' else '' }}>Very Active</option>
+                                    <option value="very_active" {{ 'selected' if form_data and form_data.activity_level == 'very_active' else '' }}>Extremely Active</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-gradient">
+                                <i class="bi bi-rocket me-2"></i>Create Account
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="text-center mt-4">
+                        <p style="color: var(--text-muted);">
+                            Already have an account? 
+                            <a href="{{ url_for('login') }}" style="color: var(--accent-cyan); text-decoration: none;">Log in</a>
+                        </p>
+                        <a href="{{ url_for('index') }}" class="text-muted text-decoration-none small">
+                            <i class="bi bi-arrow-left me-1"></i>Back to Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

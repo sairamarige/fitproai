@@ -1,0 +1,6 @@
+Flask
+Werkzeug
+
+# Optional - only needed if you switch DB_TYPE to 'mysql' in config.py
+# PyMySQL
+# cryptography

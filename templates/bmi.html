@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}BMI Calculator - FitPro AI{% endblock %}
+
+{% block content %}
+<section class="bmi-section py-4">
+    <div class="container">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col">
+                <h2 class="fw-bold mb-1">
+                    <i class="bi bi-calculator me-2" style="color: var(--accent-purple);"></i>BMI Calculator
+                </h2>
+                <p class="mb-0" style="color: var(--text-secondary);">Calculate and track your Body Mass Index.</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- BMI Calculator Card -->
+            <div class="col-lg-5">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-3">
+                        <i class="bi bi-heart-pulse me-2" style="color: var(--danger-color);"></i>Calculate BMI
+                    </h5>
+                    <form action="{{ url_for('bmi') }}" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label">Height (cm)</label>
+                            <div class="input-group">
+                                <span class="input-group-text" style="background: rgba(255,255,255,0.05); border-color: var(--glass-border);">
+                                    <i class="bi bi-ruler"></i>
+                                </span>
+                                <input type="number" name="height_cm" class="form-control form-control-glass" 
+                                       step="0.1" required min="50" max="300"
+                                       value="{{ user.height_cm or '' }}" placeholder="e.g., 175">
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Weight (kg)</label>
+                            <div class="input-group">
+                                <span class="input-group-text" style="background: rgba(255,255,255,0.05); border-color: var(--glass-border);">
+                                    <i class="bi bi-weight"></i>
+                                </span>
+                                <input type="number" name="weight_kg" class="form-control form-control-glass" 
+                                       step="0.1" required min="10" max="500"
+                                       value="{{ user.weight_kg or '' }}" placeholder="e.g., 70">
+                            </div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-gradient">
+                                <i class="bi bi-calculator me-2"></i>Calculate BMI
+                            </button>
+                        </div>
+                    </form>
+
+                    {% if bmi_result %}
+                    <div class="mt-4 p-3 rounded-3 text-center" style="background: rgba(255,255,255,0.03);">
+                        <h6 class="mb-2" style="color: var(--text-muted);">Your BMI</h6>
+                        <div class="display-3 fw-bold mb-2" style="background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                            {{ bmi_result.value }}
+                        </div>
+                        <span class="badge fs-6 px-3 py-2 
+                            {{ 'bg-success' if bmi_result.category == 'normal' else 'bg-info' if bmi_result.category == 'underweight' else 'bg-warning' if bmi_result.category == 'overweight' else 'bg-danger' }}">
+                            {{ bmi_result.category|title }}
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- BMI Categories Reference -->
+                <div class="glass-card p-4 mt-4">
+                    <h5 class="fw-bold mb-3">BMI Categories</h5>
+                    <div class="list-group list-group-flush" style="background: transparent;">
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0" style="background: transparent; border-color: var(--glass-border);">
+                            <span><span class="badge bg-info me-2">&lt; 18.5</span> Underweight</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0" style="background: transparent; border-color: var(--glass-border);">
+                            <span><span class="badge bg-success me-2">18.5 - 24.9</span> Normal</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0" style="background: transparent; border-color: var(--glass-border);">
+                            <span><span class="badge bg-warning me-2">25 - 29.9</span> Overweight</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0" style="background: transparent; border-color: var(--glass-border);">
+                            <span><span class="badge bg-danger me-2">&ge; 30</span> Obese</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BMI History Chart -->
+            <div class="col-lg-7">
+                <div class="glass-card p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0">
+                            <i class="bi bi-graph-up me-2" style="color: var(--accent-cyan);"></i>BMI History
+                        </h5>
+                    </div>
+                    {% if bmi_history %}
+                    <div style="height: 300px;">
+                        <canvas id="bmiChart"></canvas>
+                    </div>
+
+                    <!-- History Table -->
+                    <div class="table-responsive mt-4">
+                        <table class="table table-dark table-sm mb-0" style="--bs-table-bg: transparent; --bs-table-color: var(--text-primary);">
+                            <thead>
+                                <tr style="border-color: var(--glass-border);">
+                                    <th>Date</th>
+                                    <th>Height</th>
+                                    <th>Weight</th>
+                                    <th>BMI</th>
+                                    <th>Category</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for bmi in bmi_history[:10] %}
+                                <tr style="border-color: var(--glass-border);">
+                                    <td>{{ bmi.calculated_at.strftime('%Y-%m-%d') if bmi.calculated_at else '-' }}</td>
+                                    <td>{{ bmi.height_cm }} cm</td>
+                                    <td>{{ bmi.weight_kg }} kg</td>
+                                    <td class="fw-bold">{{ bmi.bmi_value }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {{ 'bg-success' if bmi.bmi_category == 'normal' else 'bg-info' if bmi.bmi_category == 'underweight' else 'bg-warning' if bmi.bmi_category == 'overweight' else 'bg-danger' }}">
+                                            {{ bmi.bmi_category|title }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-graph-up display-1" style="color: var(--text-muted);"></i>
+                        <h5 class="mt-3">No BMI History</h5>
+                        <p style="color: var(--text-secondary);">Calculate your BMI to start tracking!</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+{% if bmi_history %}
+<script>
+const bmiCtx = document.getElementById('bmiChart').getContext('2d');
+new Chart(bmiCtx, {
+    type: 'line',
+    data: {
+        labels: {{ bmi_history|map(attribute='calculated_at')|list|reverse|list|tojson|safe }},
+        datasets: [{
+            label: 'BMI',
+            data: {{ bmi_history|map(attribute='bmi_value')|list|reverse|list|tojson|safe }},
+            borderColor: '#9b5de5',
+            backgroundColor: 'rgba(155, 93, 229, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#f15bb5',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 5
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            x: {
+                grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                ticks: { color: 'rgba(255, 255, 255, 0.5)' }
+            },
+            y: {
+                grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                ticks: { color: 'rgba(255, 255, 255, 0.5)' },
+                min: 10,
+                max: 45
+            }
+        }
+    }
+});
+</script>
+{% endif %}
+{% endblock %}
