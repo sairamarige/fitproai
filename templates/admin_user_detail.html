@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}{{ target.username }} - Admin - FitPro AI{% endblock %}
+
+{% block content %}
+<section class="admin-user-section py-4">
+    <div class="container">
+        <!-- Back link -->
+        <div class="row mb-3">
+            <div class="col">
+                <a href="{{ url_for('admin_dashboard') }}" class="text-decoration-none small" style="color: var(--text-muted);">
+                    <i class="bi bi-arrow-left me-1"></i>Back to Admin
+                </a>
+            </div>
+        </div>
+
+        <!-- Profile Header -->
+        <div class="glass-card p-4 mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h3 class="fw-bold mb-1">{{ target.full_name or target.username }}
+                        {% if target.is_admin %}<span class="badge bg-warning text-dark ms-2">Admin</span>{% endif %}
+                        {% if not target.is_active %}<span class="badge bg-danger ms-2">Deactivated</span>{% endif %}
+                    </h3>
+                    <p class="mb-1" style="color: var(--text-muted);">@{{ target.username }} &middot; {{ target.email }}</p>
+                    <p class="mb-0 small" style="color: var(--text-secondary);">
+                        Joined {{ target.created_at.strftime('%Y-%m-%d') if target.created_at is not string else target.created_at[:10] }}
+                        &middot; Goal: {{ (target.fitness_goal or 'general_fitness')|replace('_', ' ')|title }}
+                        &middot; Activity: {{ (target.activity_level or 'moderate')|replace('_', ' ')|title }}
+                    </p>
+                </div>
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                        <span class="badge glass px-3 py-2">{{ target.age or '-' }} yrs</span>
+                        <span class="badge glass px-3 py-2">{{ target.height_cm or '-' }} cm</span>
+                        <span class="badge glass px-3 py-2">{{ target.weight_kg or '-' }} kg</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="stat-card glass-card text-center">
+                    <div class="stat-value fs-3">{{ workout_stats.total_workouts }}</div>
+                    <div class="stat-label">Workouts</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card glass-card text-center">
+                    <div class="stat-value fs-3">{{ "{:,}".format(workout_stats.total_calories) }}</div>
+                    <div class="stat-label">Calories Burned</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card glass-card text-center">
+                    <div class="stat-value fs-3">{{ diet_stats.total_meals }}</div>
+                    <div class="stat-label">Meals Logged</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card glass-card text-center">
+                    <div class="stat-value fs-3">{{ progress_records|length }}</div>
+                    <div class="stat-label">Progress Records</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Workouts -->
+        <div class="glass-card overflow-hidden mb-4">
+            <div class="p-3 border-bottom" style="border-color: var(--glass-border) !important;">
+                <h5 class="fw-bold mb-0"><i class="bi bi-lightning-charge me-2"></i>Workouts</h5>
+            </div>
+            {% if workouts %}
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0" style="--bs-table-bg: transparent; --bs-table-color: var(--text-primary);">
+                    <thead>
+                        <tr style="border-color: var(--glass-border);">
+                            <th>Name</th><th>Category</th><th>Duration</th><th>Calories</th><th>Date</th><th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for w in workouts %}
+                        <tr style="border-color: var(--glass-border);">
+                            <td class="fw-bold">{{ w.name }}</td>
+                            <td><span class="badge glass">{{ w.category|title }}</span></td>
+                            <td>{{ w.duration_minutes }} min</td>
+                            <td>{{ w.calories_burned or '-' }}</td>
+                            <td>{{ w.scheduled_date or '-' }}</td>
+                            <td>
+                                {% if w.completed %}<span class="badge bg-success">Done</span>
+                                {% else %}<span class="badge glass">Planned</span>{% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4"><p style="color: var(--text-secondary);">No workouts logged.</p></div>
+            {% endif %}
+        </div>
+
+        <!-- Diet Plans -->
+        <div class="glass-card overflow-hidden mb-4">
+            <div class="p-3 border-bottom" style="border-color: var(--glass-border) !important;">
+                <h5 class="fw-bold mb-0"><i class="bi bi-apple me-2"></i>Diet Log</h5>
+            </div>
+            {% if diet_plans %}
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0" style="--bs-table-bg: transparent; --bs-table-color: var(--text-primary);">
+                    <thead>
+                        <tr style="border-color: var(--glass-border);">
+                            <th>Meal</th><th>Type</th><th>Calories</th><th>Protein</th><th>Carbs</th><th>Fats</th><th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for d in diet_plans %}
+                        <tr style="border-color: var(--glass-border);">
+                            <td class="fw-bold">{{ d.meal_name }}</td>
+                            <td><span class="badge glass">{{ d.meal_type|title }}</span></td>
+                            <td>{{ d.calories }} kcal</td>
+                            <td>{{ d.protein_g }}g</td>
+                            <td>{{ d.carbs_g }}g</td>
+                            <td>{{ d.fats_g }}g</td>
+                            <td>{{ d.scheduled_date or '-' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4"><p style="color: var(--text-secondary);">No meals logged.</p></div>
+            {% endif %}
+        </div>
+
+        <!-- Progress Records -->
+        <div class="glass-card overflow-hidden mb-4">
+            <div class="p-3 border-bottom" style="border-color: var(--glass-border) !important;">
+                <h5 class="fw-bold mb-0"><i class="bi bi-graph-up-arrow me-2"></i>Progress Records</h5>
+            </div>
+            {% if progress_records %}
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0" style="--bs-table-bg: transparent; --bs-table-color: var(--text-primary);">
+                    <thead>
+                        <tr style="border-color: var(--glass-border);">
+                            <th>Date</th><th>Weight</th><th>Body Fat</th><th>Muscle</th><th>Chest</th><th>Waist</th><th>Hips</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in progress_records %}
+                        <tr style="border-color: var(--glass-border);">
+                            <td class="fw-bold">{{ r.record_date }}</td>
+                            <td>{{ r.weight_kg }} kg</td>
+                            <td>{{ r.body_fat_percent }}%</td>
+                            <td>{{ r.muscle_mass_kg }} kg</td>
+                            <td>{{ r.chest_cm }} cm</td>
+                            <td>{{ r.waist_cm }} cm</td>
+                            <td>{{ r.hips_cm }} cm</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4"><p style="color: var(--text-secondary);">No progress records.</p></div>
+            {% endif %}
+        </div>
+
+        <!-- BMI History -->
+        <div class="glass-card overflow-hidden">
+            <div class="p-3 border-bottom" style="border-color: var(--glass-border) !important;">
+                <h5 class="fw-bold mb-0"><i class="bi bi-calculator me-2"></i>BMI History</h5>
+            </div>
+            {% if bmi_history %}
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0" style="--bs-table-bg: transparent; --bs-table-color: var(--text-primary);">
+                    <thead>
+                        <tr style="border-color: var(--glass-border);">
+                            <th>Date</th><th>Height</th><th>Weight</th><th>BMI</th><th>Category</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for b in bmi_history %}
+                        <tr style="border-color: var(--glass-border);">
+                            <td>{{ b.calculated_at.strftime('%Y-%m-%d') if b.calculated_at is not string else b.calculated_at[:10] }}</td>
+                            <td>{{ b.height_cm }} cm</td>
+                            <td>{{ b.weight_kg }} kg</td>
+                            <td class="fw-bold">{{ b.bmi_value }}</td>
+                            <td>
+                                <span class="badge
+                                    {{ 'bg-success' if b.bmi_category == 'normal' else 'bg-info' if b.bmi_category == 'underweight' else 'bg-warning' if b.bmi_category == 'overweight' else 'bg-danger' }}">
+                                    {{ b.bmi_category|title }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4"><p style="color: var(--text-secondary);">No BMI records.</p></div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1027,6 +1027,32 @@ def mark_message_read(message_id):
     return jsonify({'success': True})
 
 
+@app.route('/admin/users/<int:user_id>')
+@admin_required
+def admin_user_detail(user_id):
+    """View a single user's full profile and activity history."""
+    target = db.get_user_by_id(user_id)
+    if not target:
+        flash('User not found.', 'danger')
+        return redirect(url_for('admin_dashboard'))
+
+    workouts = db.get_user_workouts(user_id, limit=200)
+    diet_plans = db.get_user_diet_plans(user_id, limit=200)
+    progress_records = db.get_user_progress(user_id, limit=200)
+    bmi_history = db.get_bmi_history(user_id, limit=200)
+    workout_stats = db.get_workout_stats(user_id)
+    diet_stats = db.get_diet_stats(user_id)
+
+    return render_template('admin_user_detail.html',
+                          target=target,
+                          workouts=workouts,
+                          diet_plans=diet_plans,
+                          progress_records=progress_records,
+                          bmi_history=bmi_history,
+                          workout_stats=workout_stats,
+                          diet_stats=diet_stats)
+
+
 @app.route('/admin/users/<int:user_id>/toggle-admin', methods=['POST'])
 @admin_required
 def toggle_user_admin(user_id):

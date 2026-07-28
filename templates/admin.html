@@ -88,8 +88,11 @@
                             </td>
                             <td>{{ u.created_at.strftime('%Y-%m-%d') if u.created_at is not string else u.created_at[:10] }}</td>
                             <td class="text-end">
+                                <a href="{{ url_for('admin_user_detail', user_id=u.id) }}" class="btn btn-sm btn-glass" title="View full activity">
+                                    <i class="bi bi-eye"></i>
+                                </a>
                                 {% if u.id != session.user_id %}
-                                <div class="btn-group">
+                                <div class="btn-group d-inline-flex">
                                     <form action="{{ url_for('toggle_user_admin', user_id=u.id) }}" method="POST" class="d-inline">
                                         <button type="submit" class="btn btn-sm btn-glass" title="{{ 'Revoke admin' if u.is_admin else 'Make admin' }}">
                                             <i class="bi bi-shield{{ '-slash' if u.is_admin else '-check' }}"></i>

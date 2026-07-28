@@ -555,3 +555,4 @@ db = Database()
 def init_db(app):
     """Initialize database with Flask app."""
     db.init_app(app)
+
