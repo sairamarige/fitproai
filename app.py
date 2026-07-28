@@ -1015,7 +1015,8 @@ def admin_dashboard():
         'unread_messages': db.fetchone("SELECT COUNT(*) as count FROM contact_messages WHERE is_read = 0")['count']
     }
     messages = db.get_contact_messages()
-    return render_template('admin.html', stats=stats, messages=messages)
+    users = db.get_all_users()
+    return render_template('admin.html', stats=stats, messages=messages, users=users)
 
 
 @app.route('/admin/messages/<int:message_id>/read', methods=['POST'])
@@ -1024,6 +1025,62 @@ def mark_message_read(message_id):
     """Mark a contact message as read."""
     db.mark_message_read(message_id)
     return jsonify({'success': True})
+
+
+@app.route('/admin/users/<int:user_id>/toggle-admin', methods=['POST'])
+@admin_required
+def toggle_user_admin(user_id):
+    """Grant or revoke admin rights for a user."""
+    if user_id == session['user_id']:
+        flash("You can't change your own admin status.", 'warning')
+        return redirect(url_for('admin_dashboard'))
+
+    target = db.get_user_by_id(user_id)
+    if not target:
+        flash('User not found.', 'danger')
+        return redirect(url_for('admin_dashboard'))
+
+    new_status = not bool(target.get('is_admin'))
+    db.set_user_admin(user_id, new_status)
+    flash(f"{target['username']} is now {'an admin' if new_status else 'a regular user'}.", 'success')
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/users/<int:user_id>/toggle-active', methods=['POST'])
+@admin_required
+def toggle_user_active(user_id):
+    """Activate or deactivate a user account."""
+    if user_id == session['user_id']:
+        flash("You can't deactivate your own account.", 'warning')
+        return redirect(url_for('admin_dashboard'))
+
+    target = db.get_user_by_id(user_id)
+    if not target:
+        flash('User not found.', 'danger')
+        return redirect(url_for('admin_dashboard'))
+
+    new_status = not bool(target.get('is_active', True))
+    db.set_user_active(user_id, new_status)
+    flash(f"{target['username']} has been {'reactivated' if new_status else 'deactivated'}.", 'success')
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/users/<int:user_id>/delete', methods=['POST'])
+@admin_required
+def delete_user(user_id):
+    """Permanently delete a user account."""
+    if user_id == session['user_id']:
+        flash("You can't delete your own account.", 'warning')
+        return redirect(url_for('admin_dashboard'))
+
+    target = db.get_user_by_id(user_id)
+    if not target:
+        flash('User not found.', 'danger')
+        return redirect(url_for('admin_dashboard'))
+
+    db.delete_user(user_id)
+    flash(f"User {target['username']} has been deleted.", 'success')
+    return redirect(url_for('admin_dashboard'))
 
 
 # ============================================================

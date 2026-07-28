@@ -184,6 +184,31 @@ class Database:
         self.execute(query, tuple(updates.values()) + (user_id,))
         return True
 
+    def get_all_users(self) -> List[Dict]:
+        """Get all users, most recently created first."""
+        return self.fetchall("SELECT * FROM users ORDER BY created_at DESC")
+
+    def set_user_admin(self, user_id: int, is_admin: bool) -> bool:
+        """Grant or revoke admin rights for a user."""
+        self.execute(
+            "UPDATE users SET is_admin = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            (1 if is_admin else 0, user_id)
+        )
+        return True
+
+    def set_user_active(self, user_id: int, is_active: bool) -> bool:
+        """Activate or deactivate (soft-disable) a user account."""
+        self.execute(
+            "UPDATE users SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            (1 if is_active else 0, user_id)
+        )
+        return True
+
+    def delete_user(self, user_id: int) -> bool:
+        """Permanently delete a user and all their related records."""
+        self.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        return True
+
     # ============================================================
     # WORKOUT OPERATIONS
     # ============================================================

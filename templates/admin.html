@@ -1,19 +1,20 @@
 {% extends "base.html" %}
 
-{% block title %}Admin Dashboard - FitPro AI{% endblock %}
+{% block title %}Admin - FitPro AI{% endblock %}
 
 {% block content %}
-<section class="admin-header py-4">
+<section class="admin-section py-4">
     <div class="container">
-        <h2 class="fw-bold mb-1">
-            <i class="bi bi-shield-lock me-2" style="color: var(--accent-purple);"></i>Admin Dashboard
-        </h2>
-        <p class="mb-0" style="color: var(--text-secondary);">Platform-wide stats and contact messages.</p>
-    </div>
-</section>
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col">
+                <h2 class="fw-bold mb-1">
+                    <i class="bi bi-shield-lock me-2" style="color: var(--accent-cyan);"></i>Admin Dashboard
+                </h2>
+                <p class="mb-0" style="color: var(--text-secondary);">Manage users and site activity.</p>
+            </div>
+        </div>
 
-<section class="admin-content py-3">
-    <div class="container">
         <!-- Stats Row -->
         <div class="row g-3 mb-4">
             <div class="col-6 col-md-3">
@@ -25,7 +26,7 @@
             <div class="col-6 col-md-3">
                 <div class="stat-card glass-card text-center">
                     <div class="stat-value fs-3">{{ stats.total_workouts }}</div>
-                    <div class="stat-label">Total Workouts</div>
+                    <div class="stat-label">Workouts Logged</div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
@@ -42,49 +43,72 @@
             </div>
         </div>
 
-        <!-- Contact Messages -->
-        <div class="glass-card overflow-hidden">
-            <div class="p-3 border-bottom" style="border-color: var(--glass-border) !important;">
-                <h5 class="fw-bold mb-0">
-                    Contact Messages
-                    <span class="badge glass ms-2">{{ stats.total_messages }} total</span>
-                </h5>
+        <!-- User Management -->
+        <div class="glass-card overflow-hidden mb-4">
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center" style="border-color: var(--glass-border) !important;">
+                <h5 class="fw-bold mb-0"><i class="bi bi-people me-2"></i>Users</h5>
             </div>
-            {% if messages %}
+            {% if users %}
             <div class="table-responsive">
                 <table class="table table-dark table-hover mb-0" style="--bs-table-bg: transparent; --bs-table-color: var(--text-primary);">
                     <thead>
                         <tr style="border-color: var(--glass-border);">
-                            <th>From</th>
-                            <th>Subject</th>
-                            <th>Message</th>
-                            <th>Received</th>
+                            <th>User</th>
+                            <th>Email</th>
+                            <th>Role</th>
                             <th>Status</th>
-                            <th></th>
+                            <th>Joined</th>
+                            <th class="text-end">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for msg in messages %}
-                        <tr style="border-color: var(--glass-border);" id="msg-row-{{ msg.id }}">
+                        {% for u in users %}
+                        <tr style="border-color: var(--glass-border);">
                             <td>
-                                <div class="fw-semibold">{{ msg.name }}</div>
-                                <div class="small" style="color: var(--text-muted);">{{ msg.email }}</div>
+                                <span class="fw-bold">{{ u.full_name or u.username }}</span>
+                                <br><small style="color: var(--text-muted);">@{{ u.username }}</small>
+                                {% if u.id == session.user_id %}
+                                <span class="badge glass ms-1" style="font-size: 0.65rem;">You</span>
+                                {% endif %}
                             </td>
-                            <td>{{ msg.subject or '—' }}</td>
-                            <td class="small" style="max-width: 320px;">{{ msg.message }}</td>
-                            <td class="small" style="color: var(--text-muted);">{{ msg.created_at }}</td>
+                            <td>{{ u.email }}</td>
                             <td>
-                                {% if msg.is_read %}
-                                <span class="badge glass">Read</span>
+                                {% if u.is_admin %}
+                                <span class="badge bg-warning text-dark"><i class="bi bi-shield-check me-1"></i>Admin</span>
                                 {% else %}
-                                <span class="badge" style="background: var(--primary-gradient);">New</span>
+                                <span class="badge glass">User</span>
                                 {% endif %}
                             </td>
                             <td>
-                                {% if not msg.is_read %}
-                                <button class="btn btn-sm btn-glass" onclick="markMessageRead({{ msg.id }})">
-                                    <i class="bi bi-check2"></i> Mark read
-                                </button>
+                                {% if u.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-danger">Deactivated</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ u.created_at.strftime('%Y-%m-%d') if u.created_at is not string else u.created_at[:10] }}</td>
+                            <td class="text-end">
+                                {% if u.id != session.user_id %}
+                                <div class="btn-group">
+                                    <form action="{{ url_for('toggle_user_admin', user_id=u.id) }}" method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-glass" title="{{ 'Revoke admin' if u.is_admin else 'Make admin' }}">
+                                            <i class="bi bi-shield{{ '-slash' if u.is_admin else '-check' }}"></i>
+                                        </button>
+                                    </form>
+                                    <form action="{{ url_for('toggle_user_active', user_id=u.id) }}" method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-glass" title="{{ 'Deactivate' if u.is_active else 'Reactivate' }}">
+                                            <i class="bi bi-{{ 'pause-circle' if u.is_active else 'play-circle' }}"></i>
+                                        </button>
+                                    </form>
+                                    <button type="button" class="btn btn-sm btn-glass text-danger" title="Delete user"
+                                            onclick="confirmDelete('deleteUser{{ u.id }}')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                    <form id="deleteUser{{ u.id }}" action="{{ url_for('delete_user', user_id=u.id) }}" method="POST" class="d-none">
+                                    </form>
+                                </div>
+                                {% else %}
+                                <span class="small" style="color: var(--text-muted);">&mdash;</span>
                                 {% endif %}
                             </td>
                         </tr>
@@ -94,28 +118,76 @@
             </div>
             {% else %}
             <div class="text-center py-5">
-                <i class="bi bi-envelope-open display-4" style="color: var(--text-muted);"></i>
-                <p class="mt-2 mb-0" style="color: var(--text-secondary);">No contact messages yet.</p>
+                <p style="color: var(--text-secondary);">No users found.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Contact Messages -->
+        <div class="glass-card overflow-hidden">
+            <div class="p-3 border-bottom" style="border-color: var(--glass-border) !important;">
+                <h5 class="fw-bold mb-0"><i class="bi bi-envelope me-2"></i>Contact Messages</h5>
+            </div>
+            {% if messages %}
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0" style="--bs-table-bg: transparent; --bs-table-color: var(--text-primary);">
+                    <thead>
+                        <tr style="border-color: var(--glass-border);">
+                            <th>From</th>
+                            <th>Subject</th>
+                            <th>Message</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for msg in messages %}
+                        <tr style="border-color: var(--glass-border);">
+                            <td>
+                                <span class="fw-bold">{{ msg.name }}</span>
+                                <br><small style="color: var(--text-muted);">{{ msg.email }}</small>
+                            </td>
+                            <td>{{ msg.subject or '-' }}</td>
+                            <td class="small">{{ msg.message[:80] }}{% if msg.message|length > 80 %}...{% endif %}</td>
+                            <td>{{ msg.created_at.strftime('%Y-%m-%d') if msg.created_at is not string else msg.created_at[:10] }}</td>
+                            <td>
+                                {% if msg.is_read %}
+                                <span class="badge glass">Read</span>
+                                {% else %}
+                                <span class="badge bg-info">New</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                {% if not msg.is_read %}
+                                <form action="{{ url_for('mark_message_read', message_id=msg.id) }}" method="POST" class="d-inline mark-read-form">
+                                    <button type="submit" class="btn btn-sm btn-glass">Mark Read</button>
+                                </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <p style="color: var(--text-secondary);">No messages yet.</p>
             </div>
             {% endif %}
         </div>
     </div>
 </section>
-
 {% endblock %}
 
 {% block extra_js %}
 <script>
-async function markMessageRead(id) {
-    try {
-        const res = await fetch(`/admin/messages/${id}/read`, { method: 'POST' });
-        const data = await res.json();
-        if (data.success) {
-            location.reload();
-        }
-    } catch (err) {
-        console.error('Failed to mark message read:', err);
-    }
-}
+document.querySelectorAll('.mark-read-form').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        fetch(form.action, { method: 'POST' })
+            .then(function () { location.reload(); });
+    });
+});
 </script>
 {% endblock %}
