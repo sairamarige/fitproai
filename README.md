@@ -83,7 +83,7 @@ The application will start at `http://localhost:5000`
 ### 3. First Login
 
 - Register a new account at `/signup`
-- Or login with the default admin: `admin` / `admin123`
+- Or login with the default admin: `adminname` / `adminpasword`
 
 ## Database Configuration
 
